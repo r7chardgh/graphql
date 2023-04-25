@@ -12,6 +12,20 @@ const app = express();
 
 app.use(bodyParser.json());
 
+const events = (eventIds)=>{
+    return Event.find({_id:{$in:eventIds}}).then(events=>{
+        return events.map(event=>{
+            return {...event._doc,_id:event.id,creator:user.bind(this,event._doc.creator)}
+        })
+    }).catch(err=>{throw err})
+}
+
+const user = (userId)=>{
+    return User.findById(userId).then(user=>{
+        return {...user._doc,_id:user.id, createdEvents:events.bind(this,user._doc.createdEvents)}
+    }).catch(err=>{throw err})
+}
+
 // query for fetching data
 // mutation for fetching data
 //[] list
@@ -66,9 +80,9 @@ app.use('/graphql', graphqlHTTP({
     `),
     rootValue: {
         events: () => {
-            return Event.find().populate('creator').then(events => {
+            return Event.find().then(events => {
                 return events.map(event => {
-                    return { ...event._doc, _id: event.id, creator: { ...event._doc.creator._doc, _id: event._doc.creator.id } }
+                    return { ...event._doc, _id: event.id,creator:user.bind(this,event._doc.creator)}
                 })
             }).catch(err => {
                 throw err;
