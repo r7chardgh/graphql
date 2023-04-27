@@ -1,4 +1,5 @@
 const Event = require("../../models/event");
+const User = require("../../models/user");
 const { transformEvent } = require("./merge");
 
 module.exports = {
@@ -12,7 +13,10 @@ module.exports = {
       throw error;
     }
   },
-  createEvent: async (args) => {
+  createEvent: async (args, req) => {
+    if (!req.isAuth) {
+      throw new Error("Unauthenticated!");
+    }
     // const event = {
     //     _id: Math.random().toString(),
     //     title: args.eventInput.title,
@@ -25,14 +29,14 @@ module.exports = {
       description: args.eventInput.description,
       price: +args.eventInput.price,
       date: new Date(args.eventInput.date),
-      creator: "6447872cbfbbf0f5d5236f3a",
+      creator:  req.userId,
     });
     let createdEvent;
     try {
       const res = await event.save();
 
       createdEvent = transformEvent(res);
-      const findUser = await User.findById("6447872cbfbbf0f5d5236f3a");
+      const findUser = await User.findById( req.userId);
 
       if (!findUser) {
         throw new Error("User not found.");
